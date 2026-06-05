@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const Encounter = require("../modelsMongoose/Encounter");
 const Location = require("../modelsMongoose/Location");
-const { satu_sehat_encounter, satu_sehat_mapping_lokasi_ralan, satu_sehat_mapping_lokasi_ranap, resume_pasien_ranap, bangsal, poliklinik, reg_periksa, kamar_inap, kamar, pasien, kelurahan, kecamatan, kabupaten, propinsi, pegawai, referensi_mobilejkn_bpjs_taskid, diagnosa_pasien, penyakit } = require("../models");
+const { bangsal, poliklinik, reg_periksa, kamar_inap, kamar, pasien, kelurahan, kecamatan, kabupaten, propinsi, pegawai, referensi_mobilejkn_bpjs_taskid, diagnosa_pasien, penyakit } = require("../models");
 const { Op } = require("sequelize");
 const { fetchSatusehat, fetchSatusehatBatch } = require("../helpersfetch/satusehat");
 const { getPractitioner , getPatient } = require("./identitas");
@@ -31,15 +31,6 @@ async function kirimEncounter(date) {
             model: pegawai,
             as: 'pegawai',
             attributes: ['nama', 'no_ktp'],
-        }, {
-            model: satu_sehat_mapping_lokasi_ralan,
-            as: 'satu_sehat_mapping_lokasi_ralan',
-            attributes: ['id_organisasi_satusehat', 'id_lokasi_satusehat'],
-            required: true,
-        }, {
-            model: poliklinik,
-            as: 'poliklinik',
-            attributes: ['kd_poli', 'nm_poli']
         }
         ],
     })
@@ -48,11 +39,13 @@ async function kirimEncounter(date) {
         "type": "transaction",
         "entry": []
     }
+    let pasienNotExist = 0;
     for (let x of dataReg) {
 
         let ihsPasen = await getPatient(x.pasien.no_ktp, 'id name')
         if (!ihsPasen) {
-            console.log("pasien tidak ada")
+            pasienNotExist++
+            console.log("pasien tidak ada", pasienNotExist)
             continue
         }
         let dataEncounter = await getEncounter(ihsPasen.id, x.no_rawat)
@@ -69,6 +62,9 @@ async function kirimEncounter(date) {
             // continue
         }
         let datetime = new Date(x.dataValues.tgl_registrasi + "T" + x.dataValues.jam_reg + ".000Z").toISOString();
+        let findLocation = await Location.findOne({
+            'identifier.value': x.dataValues.kd_poli
+        }, 'name id')
         let newEncounter = {
             "resourceType": "Encounter",
             "status": "arrived",
@@ -107,8 +103,8 @@ async function kirimEncounter(date) {
             "location": [
                 {
                     "location": {
-                        "reference": "Location/" + x.dataValues.satu_sehat_mapping_lokasi_ralan.id_lokasi_satusehat,
-                        "display": x.dataValues.poliklinik.nm_poli
+                        "reference": "Location/" + findLocation.id,
+                        "display": findLocation.name
                     }
                 }
             ],
@@ -148,22 +144,23 @@ async function kirimEncounter(date) {
             }
         };
         bundel.entry.push(encounterEntry);
+        console.log("data yang akan dikirim :", bundel.entry.length, "dari total data:", dataReg.length);
     }
     console.log(bundel.entry.length);
     if (bundel.entry.length > 0) {
         let kirimBundle = await fetchSatusehatBatch("POST", bundel);
         if (kirimBundle.error) {
             console.log(kirimBundle.error);
-            return
+            throw new Error(kirimBundle.error);
         }
         for (let i = 0; i < bundel.entry.length; i++) {
             let data = bundel.entry[i].resource;
             data.id = kirimBundle.entry[i].response.resourceID;
-            let x = await Encounter.create(data)
-            console.log(x)
-            // await Encounter.create(kirimBundle);
+            let x = await Encounter.create(data).catch(err => console.log(err));
+            // console.log(x)
         }
     }
+    console.log("selesai", "pasien tidak ada", pasienNotExist, "data yang akan dikirim :", bundel.entry.length, "dari total data:", dataReg.length);
 
     return
     // mongoose.disconnect();

@@ -77,4 +77,50 @@ function ClinicalCondition(config = {}) {
     }
 }
 
-module.exports = ClinicalCondition;
+function EncounterDiagnosis(config = {}) {
+    this.resourceType = "Condition";
+
+    this.clinicalStatus = {
+        coding: [
+            {
+                system: "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                code: "active",
+                display: "Active"
+            }
+        ]
+    };
+
+    this.category = [
+        {
+            coding: [
+                {
+                    system: "http://terminology.hl7.org/CodeSystem/condition-category",
+                    code: "encounter-diagnosis",
+                    display: "Encounter Diagnosis"
+                }
+            ]
+        }
+    ];
+
+    this.code = {
+        coding: [
+            {
+                system: "http://hl7.org/fhir/sid/icd-10",
+                code: config.icdCode || "",
+                display: config.icdDisplay || ""
+            }
+        ]
+    };
+
+    this.subject = {
+        reference: `Patient/${config.patientId || ''}`,
+        display: config.patientName || ''
+    };
+
+    this.encounter = {
+        reference: `Encounter/${config.encounterId || ''}`,
+        display: config.encounterDisplay || ''
+    };
+}
+
+module.exports = { ClinicalCondition, EncounterDiagnosis };

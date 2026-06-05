@@ -8,71 +8,58 @@ const { catatan_adime_gizi, pemeriksaan_ralan, pemeriksaan_ranap, pegawai } = re
 const { Op } = require("sequelize");
 const { getPesertabyKatu } = require("../helpersfetch/bpjs");
 const { fetchSatusehat, fetchSatusehatPatch, fetchSatusehatBatch } = require("../helpersfetch/satusehat");
-const { MedicalComposition } = require("./helpers/Composition");
+const { MedicalComposition } = require("../template/Composition");
+const { getPractitioner } = require("./identitas");
 const crypto = require('crypto');
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('Terhubung ke MongoDB! Composition'))
-    .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
-mongoose.connection.on('connected', () => {
-    console.log('Mongoose connected to DB');
-});
 
-mongoose.connection.on('error', (err) => {
-    console.log('Mongoose connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('Mongoose disconnected from DB');
-});
-async function getPractitioner(nik, attributes) {
-    let isexist = await Practitioner.findOne({
-        'identifier.value': nik
-    }, attributes)
-    if (isexist) {
-        return isexist
-    } else {
-        let cariIHSnumber = await fetchSatusehat("GET", `/Practitioner?identifier=https://fhir.kemkes.go.id/id/nik|${nik}`)
-        console.log(nik)
-        if (cariIHSnumber.total > 0) {
-            console.log(cariIHSnumber.entry[0].resource.id);
-            let dataIHSnumber = await fetchSatusehat("GET", `/Practitioner/${cariIHSnumber.entry[0].resource.id}`)
-            let findPegawai = await pegawai.findOne({
-                attributes: ['no_ktp', 'nama', 'nik'],
-                where: {
-                    no_ktp: nik
-                },
-            })
-            dataIHSnumber.identifier.push({
-                "system": "https://fhir.kemkes.go.id/id/rsid",
-                "value": findPegawai.nik
-            })
-            await Practitioner.create(dataIHSnumber);
-            return dataIHSnumber
-        }
-        return false
-    }
-}
 
 async function kirimInstuksiDiet(date) {
     let dateFormatted = date.split("-").join("/").replace(/-/g, "/");
     console.log("Processing Composition Date/No Rawat:", dateFormatted);
-    const encounters = await Encounter.find({
-        'identifier.value': { $regex: new RegExp(`^${dateFormatted}`) }
-    });
-    let mapEncounter = encounters.map(encounter => encounter.id)
-    // Batch query: find all observations for all encounters at once
-    const allObservations = await Composition.find({
-        'encounter.reference': {
-            $in: mapEncounter.map(id => `Encounter/${id}`)
+    const result = await Encounter.aggregate([
+        {
+            // 1. Tahap Pertama: Filter Encounter berdasarkan awalan tanggal
+            $match: {
+                'identifier.value': { $regex: new RegExp(`^${dateFormatted}`) }
+            }
+        },
+        {
+            // 2. Format ID: Buat field referensi untuk dicocokkan dengan Composition.
+            // Catatan: Jika '_id' di database adalah ObjectId, gunakan $toString. 
+            // Jika field 'id' sudah tersimpan eksplisit sebagai string, ganti menjadi "$id".
+            $addFields: {
+                encounterRef: { $concat: ["Encounter/", { $toString: "$_id" }] }
+            }
+        },
+        {
+            // 3. Left Outer Join: Relasikan dengan collection Composition
+            // Pastikan nama "compositions" sesuai dengan nama fisik collection di MongoDB.
+            $lookup: {
+                from: "compositions",
+                localField: "encounterRef",
+                foreignField: "encounter.reference",
+                as: "matchedCompositions"
+            }
+        },
+        {
+            // 4. Anti-Join: Buang semua Encounter yang memiliki kecocokan di Composition
+            $match: {
+                matchedCompositions: { $size: 0 }
+            }
+        },
+        {
+            // 5. Proyeksi: Ambil hanya value dari array identifier indeks ke-0 (No Rawat)
+            // Ini mengurangi payload data yang dikirim dari MongoDB ke Node.js
+            $project: {
+                _id: 0,
+                noRawat: { $arrayElemAt: ["$identifier.value", 0] }
+            }
         }
-    });
+    ]);
 
-    // Create a map of observations by encounter reference for quick lookup
-    let mapNoRawatExclude = allObservations.map(obs => obs.encounter.display)
-    
-    let mapNoRawat = encounters.map(encounter => encounter.identifier[0].value)
-
-    mapNoRawat = mapNoRawat.filter(noRawat => !mapNoRawatExclude.includes(noRawat))
+    // Hasil akhir sudah terfilter bersih dari database.
+    // Cukup map array object [{ noRawat: "..." }] menjadi array of strings ["..."]
+    let mapNoRawat = result.map(doc => doc.noRawat);
     let findinstuksidet = await catatan_adime_gizi.findAll({
         where: {
             no_rawat: {
@@ -86,7 +73,7 @@ async function kirimInstuksiDiet(date) {
         }],
         attributes: ['no_rawat', 'tanggal', 'intervensi', 'evaluasi', 'instruksi']
     })
-    console.log(JSON.stringify(findinstuksidet, null, 2))
+    // console.log(JSON.stringify(findinstuksidet, null, 2))
     let bundel = {
         "resourceType": "Bundle",
         "type": "transaction",
@@ -95,10 +82,12 @@ async function kirimInstuksiDiet(date) {
     if (findinstuksidet.length === 0) {
         return
     }
+    console.log("Total Composition:", findinstuksidet.length);
     for (let x of findinstuksidet) {
-        let dataEncounter = encounters.find(encounter => encounter.identifier[0].value === x.no_rawat)
+        let dataEncounter = await Encounter.findOne({
+            'identifier.value': x.no_rawat
+        }, 'id subject')
         let dataPractitioner = await getPractitioner(x.pegawai.no_ktp, 'id name')
-        console.log(dataPractitioner)
         const compositionData = new MedicalComposition({
             compositionValue: x.no_rawat,
             patientId: dataEncounter.subject.reference.split("/")[1],
@@ -139,11 +128,14 @@ async function kirimInstuksiDiet(date) {
             }
         }
     }
+    console.log("Total Kirim Composition: ", bundel.entry.length, "dari: ", findinstuksidet.length);
     return
 
     // console.log(JSON.stringify(findinstuksidet2, null, 2))
 
 
 }
-module.exports = {kirimInstuksiDiet}
+
+
+module.exports = { kirimInstuksiDiet }
 // kirimInstuksiDiet('2026-05-02')

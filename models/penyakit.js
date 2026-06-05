@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         keterangan: DataTypes.STRING,
         kd_ktg: DataTypes.STRING,
         status: DataTypes.ENUM('Menular', 'Tidak Menular'),
+        im: DataTypes.STRING
     }, {
         sequelize,
         modelName: 'penyakit',

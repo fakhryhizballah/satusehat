@@ -48,7 +48,6 @@ async function auth() {
             console.log(error);
         }
     }
-    await new Promise(resolve => setTimeout(resolve, 500));
     return authData;
 
 }
