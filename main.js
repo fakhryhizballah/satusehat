@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { kirimEncounter } = require("./controlers/Encounter");
+const { kirimEncounter, blukEncounter } = require("./controlers/Encounter");
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Terhubung ke MongoDB!'))
     .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
@@ -16,4 +16,6 @@ mongoose.connection.on('disconnected', () => {
     console.log('Mongoose disconnected from DB');
 });
 
-// kirimEncounter('x')
+kirimEncounter('2026-06-03').then(res => {
+    console.log(res);
+})
