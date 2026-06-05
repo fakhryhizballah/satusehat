@@ -65,6 +65,11 @@ async function kirimEncounter(date) {
         let findLocation = await Location.findOne({
             'identifier.value': x.dataValues.kd_poli
         }, 'name id')
+        if (!findLocation) {
+            console.log(x.dataValues.kd_poli);
+            console.log("location tidak ada")
+            continue
+        }
         let newEncounter = {
             "resourceType": "Encounter",
             "status": "arrived",
@@ -148,8 +153,11 @@ async function kirimEncounter(date) {
     }
     console.log(bundel.entry.length);
     if (bundel.entry.length > 0) {
-        let kirimBundle = await fetchSatusehatBatch("POST", bundel);
-        if (kirimBundle.error) {
+        let kirimBundle = await fetchSatusehatBatch("POST", bundel).catch((err) => {
+            console.log(JSON.stringify(err, null, 2));
+            return
+        });
+        if (kirimBundle.total == 0) {
             console.log(kirimBundle.error);
             throw new Error(kirimBundle.error);
         }

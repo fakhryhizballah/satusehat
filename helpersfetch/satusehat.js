@@ -120,7 +120,7 @@ async function fetchSatusehatBatch(method, data) {
         return response.data;
     }
     catch (error) {
-        console.log(error);
+        // console.log(error);
         return {
             total: 0,
             response: error.response.data

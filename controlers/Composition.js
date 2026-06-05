@@ -111,7 +111,10 @@ async function kirimInstuksiDiet(date) {
         bundel.entry.push(MedicalCompositionEntry);
 
     }
-    let kirim = await fetchSatusehatBatch("POST", bundel);
+    let kirim = await fetchSatusehatBatch("POST", bundel).catch((err) => {
+        console.log(JSON.stringify(err, null, 2));
+        return
+    });
     if (kirim.total === 0) {
         console.log(JSON.stringify(kirim.response.issue, null, 2));
         return
@@ -123,7 +126,7 @@ async function kirimInstuksiDiet(date) {
                 let dataComposition = bundel.entry[i].resource;
                 dataComposition.id = kirim.entry[i].response.resourceID;
                 let x = await Composition.create(dataComposition)
-                console.log(x)
+                // console.log(x)
 
             }
         }

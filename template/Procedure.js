@@ -1,16 +1,17 @@
+const Org_id = process.env.Organization_id_SATUSEHAT
 function ClinicalProcedure(config = {}) {
     this.resourceType = "Procedure";
     this.status = "completed";
 
     this.category = {
-        coding: [
+        "coding": [
             {
-                system: "http://snomed.info/sct",
-                code: config.categoryCode || "103693007",
-                display: config.categoryDisplay || "Diagnostic procedure"
+                "system": "http://snomed.info/sct",
+                "code": "103693007",
+                "display": "Diagnostic procedure"
             }
         ],
-        text: config.categoryText || "Prosedur Diagnostik"
+        "text": "Diagnostic procedure"
     };
 
     this.code = {
@@ -27,9 +28,18 @@ function ClinicalProcedure(config = {}) {
         reference: `Patient/${config.patientId || ''}`,
         display: config.patientName || ''
     };
+    this.identifier = [
+        {
+
+            "system": "http://sys-ids.kemkes.go.id/procedure/" + Org_id,
+            "use": "official",
+            "value": config.procedureValue || ''
+        }
+    ];
 
     this.encounter = {
-        reference: `Encounter/${config.encounterId || ''}`
+        reference: `Encounter/${config.encounterId || ''}`,
+        display: config.encounterDisplay || ''
     };
 }
 module.exports = {ClinicalProcedure};

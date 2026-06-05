@@ -63,8 +63,11 @@ async function kirimICD10(date) {
         }
         if (bundel.entry.length > 0) {
             console.log(JSON.stringify(bundel, null, 2));
-            let kirimBundle = await fetchSatusehatBatch("POST", bundel);
-            if (kirimBundle.error) {
+            let kirimBundle = await fetchSatusehatBatch("POST", bundel).catch((err) => {
+                console.log(JSON.stringify(err, null, 2));
+                return
+            });
+            if (kirimBundle.total === 0) {
                 console.log(kirimBundle.error);
                 // throw new Error(kirimBundle.error);
                 return
