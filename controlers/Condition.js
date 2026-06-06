@@ -32,6 +32,45 @@ async function kirimICD10(date) {
             "entry": []
         }
         for (let y of dataCondition) {
+            let findisExist = await fetchSatusehat("GET", `/Condition?encounter=${x.id}&code=${y.dataValues.kd_penyakit}`)
+            if (findisExist.total > 0) {
+                let diagnosa_pasien = []
+                diagnosa_pasien.push({
+                    "condition": {
+                        "display": findisExist.entry[0].resource.code.coding[0].display,
+                        "reference": "Condition/" + findisExist.entry[0].resource.id
+                    },
+                    "use": {
+                        "coding": [
+                            {
+                                "code": "DD",
+                                "display": "Discharge diagnosis",
+                                "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role"
+                            }
+                        ]
+                    }
+                })
+                let addDiagnosis = [
+                    {
+                        "op": "add",
+                        "path": "/diagnosis",
+                        "value": diagnosa_pasien
+                    }
+                ]
+                let updateEncounter = await fetchSatusehatPatch("PATCH", `Encounter/${x.id}`, addDiagnosis);
+                await Encounter.updateOne({ id: x.id }, { diagnosis: updateEncounter.diagnosis, meta: updateEncounter.meta })
+                let finddataCondition = await Condition.findOne({
+                    'id': findisExist.entry[0].resource.id
+                })
+                if (!finddataCondition) {
+                    let dataExist = await Condition.create(findisExist.entry[0].resource);
+                }
+                continue
+            }
+
+
+
+            // console.log('Data sudah ada di satu sehat');
             if (y.dataValues.penyakit.dataValues.im == '1') {
                let kodePenyakit = await penyakit.findOne({
                    where: {
@@ -67,8 +106,8 @@ async function kirimICD10(date) {
                 console.log(JSON.stringify(err, null, 2));
                 return
             });
-            if (kirimBundle.total === 0) {
-                console.log(kirimBundle.error);
+            if (kirimBundle.total == 0) {
+                console.log("Error Kirim ICD 10 Date/No Rawat:", x.identifier[0].value);
                 // throw new Error(kirimBundle.error);
                 return
             }

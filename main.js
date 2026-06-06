@@ -4,6 +4,8 @@ const { kirimEncounter, blukEncounter } = require("./controlers/Encounter");
 const { kirimInstuksiDiet } = require("./controlers/Composition");
 const { kirimICD10 } = require("./controlers/Condition");
 const { kirimICD9 } = require("./controlers/Procedure");
+const { kirimObservation } = require("./controlers/Observation");
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Terhubung ke MongoDB!'))
     .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
@@ -19,7 +21,7 @@ mongoose.connection.on('disconnected', () => {
     console.log('Mongoose disconnected from DB');
 });
 
-
+// console.log(process.env.MONGO_URI)
 
 (async () => {
     let yearnow = new Date().getFullYear();
@@ -34,6 +36,7 @@ mongoose.connection.on('disconnected', () => {
             await kirimEncounter(`${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${i < 10 ? '0' + i : i}`);
             await kirimICD10(`${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${i < 10 ? '0' + i : i}`);
             await kirimICD9(`${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${i < 10 ? '0' + i : i}`);
+            await kirimObservation(`${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${i < 10 ? '0' + i : i}`);
             await kirimInstuksiDiet(`${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${i < 10 ? '0' + i : i}`);
             console.log(`${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${i < 10 ? '0' + i : i}`);
         }
@@ -42,5 +45,6 @@ mongoose.connection.on('disconnected', () => {
     }
 })();
 
-// kirimEncounter(`2026-06-05`);
+// kirimObservation(`2026-06-05`);
+// kirimICD10(`2026-04-02`);
 // kirimICD9(`2026-04-02`);

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "env-cmd -f .env.local node main.js",
+    "main": "env-cmd -f .env node main.js"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +16,11 @@
     "dotenv": "^17.4.2",
     "mariadb": "^3.4.5",
     "mongoose": "^8.24.0",
+    "qs": "^6.12.1",
     "redis": "^6.0.0",
-    "sequelize": "^6.37.8",
-    "qs": "^6.12.1"
+    "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "env-cmd": "^11.0.0"
   }
 }

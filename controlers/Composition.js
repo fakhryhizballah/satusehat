@@ -80,6 +80,7 @@ async function kirimInstuksiDiet(date) {
         "entry": []
     }
     if (findinstuksidet.length === 0) {
+        console.log("No instuksi diet Found")
         return
     }
     console.log("Total Composition:", findinstuksidet.length);

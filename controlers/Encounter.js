@@ -157,9 +157,11 @@ async function kirimEncounter(date) {
             console.log(JSON.stringify(err, null, 2));
             return
         });
+        console.log(kirimBundle);
         if (kirimBundle.total == 0) {
             console.log(kirimBundle.error);
-            throw new Error(kirimBundle.error);
+            // throw new Error(kirimBundle.error);
+            return
         }
         for (let i = 0; i < bundel.entry.length; i++) {
             let data = bundel.entry[i].resource;
