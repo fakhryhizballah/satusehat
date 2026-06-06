@@ -4,7 +4,7 @@ const Encounter = require("../modelsMongoose/Encounter");
 const Location = require("../modelsMongoose/Location");
 const { bangsal, poliklinik, reg_periksa, kamar_inap, kamar, pasien, kelurahan, kecamatan, kabupaten, propinsi, pegawai, referensi_mobilejkn_bpjs_taskid, diagnosa_pasien, penyakit } = require("../models");
 const { Op } = require("sequelize");
-const { fetchSatusehat, fetchSatusehatBatch } = require("../helpersfetch/satusehat");
+const { fetchSatusehat, fetchSatusehatPatch, fetchSatusehatBatch } = require("../helpersfetch/satusehat");
 const { getPractitioner , getPatient } = require("./identitas");
 
 async function kirimEncounter(date) {
@@ -202,8 +202,261 @@ async function blukEncounter(noRawat) {
     }
     return [];
 }
+async function updateEncounter(date) {
+    let dateFormatted = date.split("-").join("/").replace(/-/g, "/");
+    let dataEncounter = await Encounter.find({
+        'identifier.value': { $regex: dateFormatted, $options: 'i' },
+        'status': { $ne: 'finished' },
+        'class.code': 'AMB'
+    });
+    console.log(`Found ${dataEncounter.length} encounters to update`);
+
+    const taskIdToStatus = {
+        '1': 'arrived',
+        '2': 'arrived',
+        '3': 'arrived',
+        '4': 'in-progress',
+        '5': 'finished',
+        '6': 'finished',
+        '7': 'finished'
+    };
+
+    for (let encounter of dataEncounter) {
+        try {
+            let noRawat = encounter.identifier[0].value;
+            let taskRecords = await referensi_mobilejkn_bpjs_taskid.findAll({
+                where: {
+                    no_rawat: noRawat
+                },
+                attributes: ['taskid', 'waktu'],
+                order: [['waktu', 'ASC']]
+            });
+
+            if (taskRecords.length < 2) {
+                console.log(`No sufficient task records for ${noRawat}`);
+                continue;
+            }
+            console.log(`Updating encounter for ${noRawat}`);
+
+            let waktuStart = taskRecords[0].dataValues.waktu;
+            let waktuEnd = taskRecords[taskRecords.length - 1].dataValues.waktu;
+
+            let statusHistory = [];
+            for (let i = 0; i < taskRecords.length - 1; i++) {
+                const status = taskIdToStatus[taskRecords[i].dataValues.taskid] || 'arrived';
+                statusHistory.push({
+                    period: {
+                        start: waktuStart,
+                        end: taskRecords[i + 1].dataValues.waktu
+                    },
+                    status: status
+                });
+            }
+
+            statusHistory.push({
+                period: {
+                    start: waktuEnd,
+                    end: waktuEnd
+                },
+                status: 'finished'
+            });
+
+            encounter.status = 'finished';
+            encounter.period = {
+                start: waktuStart,
+                end: waktuEnd
+            };
+            encounter.statusHistory = statusHistory;
+            const patchData = [
+                {
+                    "op": "replace",
+                    "path": "/status",
+                    "value": "finished"
+                },
+                {
+                    "op": "replace",
+                    "path": "/statusHistory",
+                    "value": statusHistory
+                },
+                {
+                    "op": "replace",
+                    "path": "/period",
+                    "value": {
+                        "start": waktuStart,
+                        "end": waktuEnd
+                    }
+                }
+            ];
+            let updatePatch = await fetchSatusehatPatch("PATCH", `Encounter/${encounter.id}`, patchData);
+            if (updatePatch.total == 0) {
+                console.log(`Failed to update encounter for ${noRawat}`);
+                continue;
+            }
+            let updateDataEndounter = await Encounter.findByIdAndUpdate(
+                encounter._id,
+                {
+                    status: 'finished',
+                    period: encounter.period,
+                    statusHistory: encounter.statusHistory
+                },
+                { new: true }
+            );
+            console.log(`Updated encounter ${noRawat}`);
+        } catch (err) {
+            console.log(`Error updating encounter: ${err.message}`);
+        }
+
+    }
+    console.log("Selesai Update Encounter Rawat Jalan " + date);
+    return
+}
+async function updateEncounterRanap(date) {
+    let dateFormatted = date.split("-").join("/").replace(/-/g, "/");
+    let dataEncounter = await Encounter.find({
+        'identifier.value': { $regex: dateFormatted, $options: 'i' },
+        'status': { $ne: 'finished' },
+        'class.code': 'IMP'
+    });
+    console.log(dateFormatted);
+    console.log(`Found ${dataEncounter.length} encounters to update`);
+
+    for (let encounter of dataEncounter) {
+        try {
+            let noRawat = encounter.identifier[0].value;
+            let kamarData = await kamar_inap.findOne({
+                where: {
+                    no_rawat: noRawat,
+                    stts_pulang: { [Op.notIn]: ['-', 'Pindah Kamar'] }
+                },
+                attributes: ['tgl_masuk', 'jam_masuk', 'tgl_keluar', 'jam_keluar', 'kd_kamar'],
+                include: [{
+                    model: kamar,
+                    as: 'kode_kamar',
+                    attributes: ['kd_kamar', 'kd_bangsal']
+                }]
+            });
+
+            if (!kamarData) {
+                console.log(`No kamar_inap data found for ${noRawat}`);
+                continue;
+            }
+
+            let startDateTime = new Date(kamarData.dataValues.tgl_masuk + "T" + kamarData.dataValues.jam_masuk + ".000Z").toISOString();
+            let endDateTime = kamarData.dataValues.tgl_keluar && kamarData.dataValues.jam_keluar
+                ? new Date(kamarData.dataValues.tgl_keluar + "T" + kamarData.dataValues.jam_keluar + ".000Z").toISOString()
+                : startDateTime;
+
+            let locationPatch = null;
+            let kodeKamar = kamarData.dataValues.kd_kamar;
+            let mappingLokasi = await Location.find({
+                'identifier.value': kodeKamar
+            });
+
+            if (mappingLokasi) {
+                locationPatch = {
+                    "op": "add",
+                    "path": "/location/-",
+                    "value": {
+                        "location": {
+                            "reference": "Location/" + mappingLokasi[0].id,
+                            "display": mappingLokasi[0].description
+                        }
+                    }
+                };
+            }
+
+            let statusHistory = [
+                {
+                    status: "arrived",
+                    period: {
+                        start: encounter.period.start,
+                        end: encounter.period.end
+                    }
+                },
+                {
+                    status: "in-progress",
+                    period: {
+                        start: encounter.period.end,
+                        end: kamarData.dataValues.tgl_keluar && kamarData.dataValues.jam_keluar ? endDateTime : startDateTime
+                    }
+                }
+            ];
+
+            if (kamarData.dataValues.tgl_keluar && kamarData.dataValues.jam_keluar) {
+                statusHistory.push({
+                    status: "finished",
+                    period: {
+                        start: endDateTime,
+                        end: endDateTime
+                    }
+                });
+            }
+
+            let newStatus = kamarData.dataValues.tgl_keluar && kamarData.dataValues.jam_keluar ? 'finished' : 'in-progress';
+
+            const patchData = [
+                {
+                    "op": "replace",
+                    "path": "/status",
+                    "value": newStatus
+                },
+                {
+                    "op": "replace",
+                    "path": "/period",
+                    "value": {
+                        "start": startDateTime,
+                        "end": endDateTime
+                    }
+                },
+                {
+                    "op": "replace",
+                    "path": "/statusHistory",
+                    "value": statusHistory
+                }
+            ];
+
+            if (locationPatch) {
+                patchData.push(locationPatch);
+            }
+
+            let updatePatch = await fetchSatusehatPatch("PATCH", `Encounter/${encounter.id}`, patchData);
+            if (updatePatch.total == 0) {
+                console.log(`Failed to update encounter for ${noRawat}`);
+                continue;
+            }
+
+            let updateDataEncounter = await Encounter.findByIdAndUpdate(
+                encounter._id,
+                {
+                    status: newStatus,
+                    period: {
+                        start: startDateTime,
+                        end: endDateTime
+                    },
+                    statusHistory: statusHistory
+                },
+                { new: true }
+            );
+
+            if (locationPatch) {
+                await Encounter.updateOne(
+                    { _id: encounter._id },
+                    { $push: { location: locationPatch.value } }
+                );
+            }
+            console.log(`Updated encounter ${noRawat} with status: ${newStatus}`);
+            // return
+        } catch (err) {
+            console.log(`Error updating encounter: ${err.message}`);
+        }
+    }
+    console.log("Selesai Update Encounter Rawat Inap " + date);
+    return
+}
 // kirimEncounter('x')
 module.exports = { 
     kirimEncounter,
-    blukEncounter
+    blukEncounter,
+    updateEncounter,
+    updateEncounterRanap
  }

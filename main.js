@@ -1,11 +1,12 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { kirimEncounter, blukEncounter } = require("./controlers/Encounter");
+const cron = require('node-cron');
+const { kirimEncounter, updateEncounter, updateEncounterRanap, blukEncounter } = require("./controlers/Encounter");
 const { kirimInstuksiDiet } = require("./controlers/Composition");
 const { kirimICD10 } = require("./controlers/Condition");
 const { kirimICD9 } = require("./controlers/Procedure");
 const { kirimObservation } = require("./controlers/Observation");
-
+const { kirimMedicationRequest, kirimMedicationDispense } = require("./controlers/Medication");
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Terhubung ke MongoDB!'))
     .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
@@ -55,7 +56,7 @@ function getDate(minDay) {
     return `${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${tanggal < 10 ? '0' + tanggal : tanggal}`
 }
 // console.log(getDate(28));
-// kirimICD9(getDate(28));
+kirimEncounter(getDate(1));
 
 cron.schedule('0 18 * * *', async () => {
     await kirimEncounter(getDate(0));
@@ -66,8 +67,12 @@ cron.schedule('0 18 * * *', async () => {
 cron.schedule('0 4 * * *', async () => {
     await kirimObservation(getDate(1));
     await kirimInstuksiDiet(getDate(1));
+    await kirimICD10(getDate(1));
+    await updateEncounter(getDate(2));
     await kirimICD10(getDate(10));
     await kirimICD9(getDate(10));
+    await kirimMedicationRequest(getDate(2));
+    await kirimMedicationDispense(getDate(2));
     console.log('Job Jam 4 Selesai ' + getDate(0));
 });
 
