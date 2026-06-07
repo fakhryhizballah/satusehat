@@ -56,7 +56,7 @@ function getDate(minDay) {
     return `${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${tanggal < 10 ? '0' + tanggal : tanggal}`
 }
 // console.log(getDate(28));
-kirimEncounter(getDate(1));
+kirimObservation(getDate(1));
 
 cron.schedule('0 18 * * *', async () => {
     await kirimEncounter(getDate(0));

@@ -131,8 +131,6 @@ async function kirimObservation(date) {
                         let dataHeartRateObservation = new HeartRateObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Nadi pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
-
                             heartRate: i.nadi
                         });
                         const heartRateEntry = {
@@ -153,7 +151,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             type: 'systolic',
                             value: i.tensi.split("/")[0],
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+
                         });
 
                         // Generate resource Diastolik
@@ -161,7 +159,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             type: 'diastolic',
                             value: i.tensi.split("/")[1],
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+
                         });
 
                         const systolicEntry = {
@@ -193,8 +191,6 @@ async function kirimObservation(date) {
                         let dataTemperatureObservation = new BodyTemperatureObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Suhu Tubuh pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
-
                             temperature: i.suhu_tubuh
                         });
                         const temperatureEntry = {
@@ -213,7 +209,6 @@ async function kirimObservation(date) {
                         let dataRespiratoryRateObservation = new RespiratoryRateObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Respirasi pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             respiratoryRate: i.respirasi
                         });
@@ -233,7 +228,6 @@ async function kirimObservation(date) {
                         let dataBodyWeightObservation = new BodyWeightObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             bodyWeight: i.spo2
                         });
@@ -253,7 +247,6 @@ async function kirimObservation(date) {
                         let dataOxygenSaturationObservation = new OxygenSaturationObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             oxygenSaturation: i.spo2
                         });
@@ -274,7 +267,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             description: `instruksi: ${i.intruksi} RTL: ${i.rtl}`,
                             encounterDisplay: "Pemeriksaan Fisik Intruksi dan RTL pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+
                         });
                         const carePlanEntry = {
                             "fullUrl": "urn:uuid:" + crypto.randomUUID(),
@@ -356,20 +349,23 @@ async function kirimObservation(date) {
                     if (ihsPetugas === false) {
                         continue;
                     }
+                    let dateObj = new Date(i.tgl_perawatan + "T" + i.jam_rawat + "+07:00");
+                    let utcString = dateObj.toISOString();
                     const sharedConfig = {
                         patientId: x.subject.reference.split("/")[1],
                         patientDisplay: x.subject.display,
                         encounterId: x.id,
                         practitionerId: ihsPetugas.id,
                         practitionerDisplay: ihsPetugas.name[0].text,
-                        dateTime: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
-                        issued: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+                        dateTime: utcString.split('.')[0] + "+00:00",
+                        issued: utcString.split('.')[0] + "+00:00",
+                        effectiveDate: utcString.split('.')[0] + "+00:00"
                     };
                     if (i.nadi != '' && i.nadi != 0) {
                         let dataHeartRateObservation = new HeartRateObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Nadi pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
+
 
                             heartRate: i.nadi
                         });
@@ -391,7 +387,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             type: 'systolic',
                             value: i.tensi.split("/")[0],
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+
                         });
 
                         // Generate resource Diastolik
@@ -399,7 +395,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             type: 'diastolic',
                             value: i.tensi.split("/")[1],
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+
                         });
 
                         const systolicEntry = {
@@ -431,7 +427,6 @@ async function kirimObservation(date) {
                         let dataTemperatureObservation = new BodyTemperatureObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Suhu Tubuh pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             temperature: i.suhu_tubuh
                         });
@@ -451,7 +446,6 @@ async function kirimObservation(date) {
                         let dataRespiratoryRateObservation = new RespiratoryRateObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Respirasi pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             respiratoryRate: i.respirasi
                         });
@@ -471,7 +465,6 @@ async function kirimObservation(date) {
                         let dataBodyWeightObservation = new BodyWeightObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             bodyWeight: i.spo2
                         });
@@ -491,7 +484,6 @@ async function kirimObservation(date) {
                         let dataOxygenSaturationObservation = new OxygenSaturationObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
 
                             oxygenSaturation: i.spo2
                         });
@@ -512,7 +504,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             description: `instruksi: ${i.intruksi} RTL: ${i.rtl}`,
                             encounterDisplay: "Pemeriksaan Fisik Intruksi dan RTL pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-                            effectiveDate: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+
                         });
                         const carePlanEntry = {
                             "fullUrl": "urn:uuid:" + crypto.randomUUID(),
