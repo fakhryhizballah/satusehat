@@ -191,6 +191,8 @@ async function kirimMedicationRequest(date) {
                     frequency = parseInt(matches[1]);
                     doseValue = parseInt(matches[2]);
                 }
+                let dateObj = new Date(y.tgl_peresepan + "T" + y.jam_peresepan + "+07:00");
+                let utcString = dateObj.toISOString();
 
                 let dataMedicationRequest = {
                     resourceType: "MedicationRequest",
@@ -231,7 +233,7 @@ async function kirimMedicationRequest(date) {
                         reference: "Encounter/" + x.id,
                         display: no_rawat
                     },
-                    authoredOn: y.tgl_peresepan + "T" + y.jam_peresepan + "+07:00",
+                    authoredOn: utcString.split('.')[0] + "+00:00",
                     requester: {
                         reference: "Practitioner/" + practitioner.id,
                         display: practitioner.name[0].text

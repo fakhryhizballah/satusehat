@@ -118,14 +118,16 @@ async function kirimObservation(date) {
                     if (ihsPetugas === false) {
                         continue;
                     }
+                    let dateObj = new Date(i.tgl_perawatan + "T" + i.jam_rawat + "+07:00");
+                    let utcString = dateObj.toISOString();
                     const sharedConfig = {
                         patientId: x.subject.reference.split("/")[1],
                         patientDisplay: x.subject.display,
                         encounterId: x.id,
                         practitionerId: ihsPetugas.id,
                         practitionerDisplay: ihsPetugas.name[0].text,
-                        dateTime: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00",
-                        issued: i.tgl_perawatan + "T" + i.jam_rawat + "+07:00"
+                        dateTime: utcString.split('.')[0] + "+00:00",
+                        issued: utcString.split('.')[0] + "+00:00"
                     };
                     if (i.nadi != '' && i.nadi != 0) {
                         let dataHeartRateObservation = new HeartRateObservation({
