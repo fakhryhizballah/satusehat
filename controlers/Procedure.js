@@ -17,9 +17,6 @@ async function kirimICD9(date) {
             }
         },
         {
-            // 2. Format ID - PERBAIKAN PENTING
-            // Gunakan "$id" (string) alih-alih { $toString: "$_id" } karena di dalam
-            // database FHIR, encounter.reference biasanya berformat "Encounter/{id string}".
             $addFields: {
                 encounterRef: { $concat: ["Encounter/", "$id"] }
             }

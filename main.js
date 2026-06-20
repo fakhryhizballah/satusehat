@@ -56,7 +56,18 @@ function getDate(minDay) {
     return `${yearnow}-${bulan < 10 ? '0' + bulan : bulan}-${tanggal < 10 ? '0' + tanggal : tanggal}`
 }
 // console.log(getDate(28));
-kirimObservation(getDate(1));
+// kirimObservation(getDate(1));
+// kirimInstuksiDiet(getDate(0));
+// kirimICD10(getDate(1));
+// kirimMedicationRequest(getDate(2));
+// updateEncounter(getDate(1));
+
+async function loop(jumlah) {
+    for (let i = jumlah; i > jumlah; i--) {
+        await kirimEncounter(getDate(i));
+    }
+}
+loop(50);
 
 cron.schedule('0 18 * * *', async () => {
     await kirimEncounter(getDate(0));

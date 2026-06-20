@@ -28,7 +28,7 @@ async function kirimInstuksiDiet(date) {
             // Catatan: Jika '_id' di database adalah ObjectId, gunakan $toString. 
             // Jika field 'id' sudah tersimpan eksplisit sebagai string, ganti menjadi "$id".
             $addFields: {
-                encounterRef: { $concat: ["Encounter/", { $toString: "$_id" }] }
+                encounterRef: { $concat: ["Encounter/", { $toString: "$id" }] }
             }
         },
         {
@@ -56,10 +56,10 @@ async function kirimInstuksiDiet(date) {
             }
         }
     ]);
-
     // Hasil akhir sudah terfilter bersih dari database.
     // Cukup map array object [{ noRawat: "..." }] menjadi array of strings ["..."]
     let mapNoRawat = result.map(doc => doc.noRawat);
+
     let findinstuksidet = await catatan_adime_gizi.findAll({
         where: {
             no_rawat: {
@@ -134,9 +134,6 @@ async function kirimInstuksiDiet(date) {
     }
     console.log("Total Kirim Composition: ", bundel.entry.length, "dari: ", findinstuksidet.length);
     return
-
-    // console.log(JSON.stringify(findinstuksidet2, null, 2))
-
 
 }
 
