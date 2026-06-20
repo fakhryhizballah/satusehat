@@ -505,7 +505,7 @@ async function kirimMedicationDispense(date) {
         if (kirimBundle.total == 0) {
             console.log(kirimBundle.response);
             // throw new Error(kirimBundle.error);
-            continue
+            return
         }
         for (let i = 0; i < bundel.entry.length; i++) {
             let data = bundel.entry[i].resource;
