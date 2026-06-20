@@ -64,6 +64,7 @@ function getDate(minDay) {
 
 async function loop(jumlah) {
     for (let i = jumlah; i > jumlah; i--) {
+        conseole.log(getDate(i));
         await kirimEncounter(getDate(i));
     }
 }
