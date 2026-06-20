@@ -63,12 +63,16 @@ function getDate(minDay) {
 // updateEncounter(getDate(1));
 
 async function loop(jumlah) {
-    for (let i = jumlah; i > jumlah; i--) {
+    for (let i = jumlah; i >= 0; i--) {
         console.log(getDate(i));
         await kirimEncounter(getDate(i));
+        await kirimICD10(getDate(i));
+        await kirimICD9(getDate(i));
+        await kirimObservation(getDate(i));
+        await updateEncounter(getDate(i));
     }
 }
-loop(50);
+loop(7);
 
 cron.schedule('0 18 * * *', async () => {
     await kirimEncounter(getDate(0));
