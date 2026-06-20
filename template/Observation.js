@@ -46,8 +46,8 @@ function HeartRateObservation(config = {}) {
         display: config.encounterDisplay || ''
     };
 
-    this.effectiveDateTime = config.effectiveDate || nowIsoStr;
-    this.issued = config.effectiveDate || nowIsoStr;
+    this.effectiveDateTime = config.effectiveDate;
+    this.issued = config.effectiveDate;
 
     this.valueQuantity = {
         value: Number(config.heartRate) || 0,
@@ -110,8 +110,8 @@ function BloodPressureObservation(config = {}) {
         display: config.encounterDisplay || ''
     };
 
-    this.effectiveDateTime = config.effectiveDate || nowIsoStr;
-    this.issued = config.effectiveDate || nowIsoStr;
+    this.effectiveDateTime = config.effectiveDate;
+    this.issued = config.effectiveDate;
 
     this.performer = [
         {
@@ -165,8 +165,8 @@ function BodyTemperatureObservation(config = {}) {
         reference: `Encounter/${config.encounterId || ''}`
     };
 
-    this.effectiveDateTime = config.effectiveDate || nowIsoStr;
-    this.issued = config.effectiveDate || nowIsoStr;
+    this.effectiveDateTime = config.effectiveDate;
+    this.issued = config.effectiveDate;
 
     this.performer = [
         {
@@ -220,8 +220,8 @@ function RespiratoryRateObservation(config = {}) {
         reference: `Encounter/${config.encounterId || ''}`
     };
 
-    this.effectiveDateTime = config.effectiveDate || nowIsoStr;
-    this.issued = config.effectiveDate || nowIsoStr;
+    this.effectiveDateTime = config.effectiveDate;
+    this.issued = config.effectiveDate;
 
     this.performer = [
         {
@@ -274,8 +274,8 @@ function BodyWeightObservation(config = {}) {
         reference: `Encounter/${config.encounterId || ''}`
     };
 
-    this.effectiveDateTime = config.effectiveDate || nowIsoStr;
-    this.issued = config.effectiveDate || nowIsoStr;
+    this.effectiveDateTime = config.effectiveDate;
+    this.issued = config.effectiveDate;
 
     this.performer = [
         {
@@ -328,8 +328,8 @@ function OxygenSaturationObservation(config = {}) {
         reference: `Encounter/${config.encounterId || ''}`
     };
 
-    this.effectiveDateTime = config.effectiveDate || nowIsoStr;
-    this.issued = config.effectiveDate || nowIsoStr;
+    this.effectiveDateTime = config.effectiveDate;
+    this.issued = config.effectiveDate;
 
     this.performer = [
         {

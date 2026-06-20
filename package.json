@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "env-cmd -f .env.local node main.js",
-    "main": "env-cmd -f .env node main.js"
+    "dev": "node --env-file=.env main.js",
+    "main": "node main.js"
   },
   "keywords": [],
   "author": "",

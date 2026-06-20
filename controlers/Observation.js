@@ -528,11 +528,12 @@ async function kirimObservation(date) {
 
                 if (kirimObservation.total === 0) {
                     console.log(JSON.stringify(kirimObservation.response.issue, null, 2));
-                    // return
-
+                    return
                 }
                 ranap++
                 console.log('kirim observation rawat inap: ' + ranap);
+                console.log(kirimObservation);
+                console.log(bundel.entry.length);
                 for (let i = 0; i < bundel.entry.length; i++) {
                     if (kirimObservation.entry[i] && kirimObservation.entry[i].response) {
                         if (kirimObservation.entry[i].response.resourceType === 'Observation') {

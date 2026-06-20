@@ -109,7 +109,7 @@ async function kirimICD10(date) {
             if (kirimBundle.total == 0) {
                 console.log("Error Kirim ICD 10 Date/No Rawat:", x.identifier[0].value);
                 // throw new Error(kirimBundle.error);
-                return
+                continue
             }
             let diagnosa_pasien = []
             for (let i = 0; i < bundel.entry.length; i++) {
