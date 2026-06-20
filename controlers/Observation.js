@@ -6,6 +6,7 @@ const Encounter = require("../modelsMongoose/Encounter");
 const Observation = require("../modelsMongoose/Observation");
 const Careplan = require("../modelsMongoose/CarePlan");
 const {pemeriksaan_ralan, pemeriksaan_ranap, pegawai, } = require("../models");
+const { Op } = require("sequelize");
 const { fetchSatusehat, fetchSatusehatPatch, fetchSatusehatBatch } = require("../helpersfetch/satusehat");
 const { HeartRateObservation, BloodPressureObservation, BodyTemperatureObservation, RespiratoryRateObservation, BodyWeightObservation, OxygenSaturationObservation } = require("../template/Observation");
 const { ClinicalCarePlan } = require("../template/CarePlan");
@@ -44,6 +45,7 @@ async function kirimObservation(date) {
         }
     });
 
+
     // Create a map of observations by encounter reference for quick lookup
     const observationsByEncounter = new Map();
     allObservations.forEach(obs => {
@@ -55,6 +57,7 @@ async function kirimObservation(date) {
     });
     let ranap = 0;
     let ralan = 0;
+    let loop = 0;
 
     for (let x of encounters) {
         let findObservation = observationsByEncounter.get(`Encounter/${x.id}`) || []
@@ -78,6 +81,7 @@ async function kirimObservation(date) {
                 "type": "transaction",
                 "entry": []
             }
+            loop++
             if (x.class.code === 'AMB' || x.class.code === 'EMER') {
                 let findperawatan = await pemeriksaan_ralan.findAll({
                     where: {
@@ -294,7 +298,8 @@ async function kirimObservation(date) {
 
                 }
                 ralan++
-                console.log('kirimObservation ralan', ralan);
+                console.log('kirimObservation ralan ' + ralan + ' dari ' + mapEncounter.length);
+                console.log('jumlah bundel', bundel.entry.length);
                 for (let i = 0; i < bundel.entry.length; i++) {
                     if (kirimObservation.entry[i] && kirimObservation.entry[i].response) {
                         if (kirimObservation.entry[i].response.resourceType === 'Observation') {
@@ -312,9 +317,11 @@ async function kirimObservation(date) {
                 }
             }
             if (x.class.code === 'IMP') {
+                let datenow = new Date();
                 let findperawatan = await pemeriksaan_ranap.findAll({
                     where: {
-                        no_rawat: norawat
+                        no_rawat: norawat,
+                        tgl_perawatan: { [Op.lte]: datenow }
                     },
                     include: [{
                         model: pegawai,
@@ -367,8 +374,6 @@ async function kirimObservation(date) {
                         let dataHeartRateObservation = new HeartRateObservation({
                             ...sharedConfig,
                             encounterDisplay: "Pemeriksaan Fisik Nadi pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-
-
                             heartRate: i.nadi
                         });
                         const heartRateEntry = {
@@ -552,6 +557,7 @@ async function kirimObservation(date) {
                     }
                 }
                 if (kirimObservation.error) {
+                    console.log("kirimObservation.error");
                     console.log(kirimObservation.error);
                     // return;
                 }
@@ -560,6 +566,8 @@ async function kirimObservation(date) {
             }
         }
     }
+    console.log(mapEncounter.length)
+    console.log(loop);
     console.log('selesai kirim observation rawat inap: ' + ranap + ' ralan: ' + ralan);
     return
 }
