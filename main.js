@@ -74,7 +74,7 @@ async function loop(jumlah) {
     }
 }
 
-
+loop(1);
 cron.schedule('0 4 * * *', async () => {
     loop(7);
     console.log('Job Jam 4 Selesai ' + getDate(0));
