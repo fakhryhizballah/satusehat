@@ -1,7 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const cron = require('node-cron');
-const { kirimEncounter, updateEncounter, updateEncounterRanap, blukEncounter } = require("./controlers/Encounter");
+const { kirimEncounter, updateEncounter, updateEncounterRanap } = require("./controlers/Encounter");
 const { kirimInstuksiDiet } = require("./controlers/Composition");
 const { kirimICD10 } = require("./controlers/Condition");
 const { kirimICD9 } = require("./controlers/Procedure");
@@ -68,27 +68,15 @@ async function loop(jumlah) {
         await kirimEncounter(getDate(i));
         await kirimICD10(getDate(i));
         await kirimICD9(getDate(i));
+        kirimInstuksiDiet(getDate(i));
         await kirimObservation(getDate(i));
         await updateEncounter(getDate(i));
     }
 }
-loop(7);
 
-cron.schedule('0 18 * * *', async () => {
-    await kirimEncounter(getDate(0));
-    await kirimEncounter(getDate(2));
-    console.log('Job Jam 18 Selesai ' + getDate(0));
-});
 
 cron.schedule('0 4 * * *', async () => {
-    await kirimObservation(getDate(1));
-    await kirimInstuksiDiet(getDate(1));
-    await kirimICD10(getDate(1));
-    await updateEncounter(getDate(2));
-    await kirimICD10(getDate(10));
-    await kirimICD9(getDate(10));
-    await kirimMedicationRequest(getDate(2));
-    await kirimMedicationDispense(getDate(2));
+    loop(7);
     console.log('Job Jam 4 Selesai ' + getDate(0));
 });
 
