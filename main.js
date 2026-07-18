@@ -68,7 +68,7 @@ async function loop(jumlah) {
         await kirimEncounter(getDate(i));
         await kirimICD10(getDate(i));
         await kirimICD9(getDate(i));
-        kirimInstuksiDiet(getDate(i));
+        await kirimInstuksiDiet(getDate(i));
         await kirimObservation(getDate(i));
         await updateEncounter(getDate(i));
         await kirimMedicationRequest(getDate(i));
@@ -76,7 +76,7 @@ async function loop(jumlah) {
     }
 }
 
-loop(1);
+loop(31);
 cron.schedule('0 4 * * *', async () => {
     loop(7);
     console.log('Job Jam 4 Selesai ' + getDate(0));
