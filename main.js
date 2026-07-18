@@ -71,6 +71,8 @@ async function loop(jumlah) {
         kirimInstuksiDiet(getDate(i));
         await kirimObservation(getDate(i));
         await updateEncounter(getDate(i));
+        await kirimMedicationRequest(getDate(i));
+        await kirimMedicationDispense(getDate(i));
     }
 }
 
