@@ -7,9 +7,9 @@ const { kirimICD10 } = require("./controlers/Condition");
 const { kirimICD9 } = require("./controlers/Procedure");
 const { kirimObservation } = require("./controlers/Observation");
 const { kirimMedicationRequest, kirimMedicationDispense } = require("./controlers/Medication");
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('Terhubung ke MongoDB!'))
-    .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
+// mongoose.connect(process.env.MONGO_URI)
+//     .then(() => console.log('Terhubung ke MongoDB!'))
+//     .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
 // mongoose.connection.on('connected', () => {
 //     console.log('Mongoose connected to DB');
 // });
@@ -63,6 +63,16 @@ function getDate(minDay) {
 // updateEncounter(getDate(1));
 
 async function loop(jumlah) {
+    let conn = await mongoose.connect(process.env.MONGO_URI)
+    if (conn) {
+        console.log('Terhubung ke MongoDB!');
+    }
+    else {
+        console.log('Gagal terhubung ke MongoDB:');
+        return
+    }
+    // console.log(conn);
+
     for (let i = jumlah; i >= 0; i--) {
         console.log(getDate(i));
         await kirimEncounter(getDate(i));
@@ -71,16 +81,18 @@ async function loop(jumlah) {
         await kirimInstuksiDiet(getDate(i));
         await kirimObservation(getDate(i));
         await updateEncounter(getDate(i));
+        await updateEncounterRanap(getDate(i));
         await kirimMedicationRequest(getDate(i));
         await kirimMedicationDispense(getDate(i));
     }
 }
 
-loop(31);
-cron.schedule('0 4 * * *', async () => {
-    loop(7);
-    console.log('Job Jam 4 Selesai ' + getDate(0));
-});
+loop(10);
+// loop(3);
+// cron.schedule('0 4 * * *', async () => {
+//     loop(7);
+//     console.log('Job Jam 4 Selesai ' + getDate(0));
+// });
 
 // kirimObservation(`2026-06-05`);
 // kirimICD10(`2026-04-02`);

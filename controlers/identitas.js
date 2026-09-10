@@ -34,6 +34,28 @@ async function getPractitioner(nik, attributes) {
                 "system": "https://fhir.kemkes.go.id/id/rsid",
                 "value": findPegawai.nik
             })
+            const nikIndex = dataIHSnumber.identifier.findIndex(
+                item => item.system === "https://fhir.kemkes.go.id/id/nik"
+            );
+
+            const newNikEntry = {
+                "system": "https://fhir.kemkes.go.id/id/nik",
+                "use": "official",
+                "value": findPegawai.no_ktp
+            };
+
+            if (nikIndex !== -1) {
+                // Replace existing NIK entry
+                dataIHSnumber.identifier[nikIndex] = newNikEntry;
+            } else {
+                // Append if NIK doesn't exist yet
+                dataIHSnumber.identifier.push(newNikEntry);
+            }
+            dataIHSnumber.name = [{
+                "use": "official",
+                "text": findPegawai.nama
+            }];
+
             await Practitioner.create(dataIHSnumber);
             return dataIHSnumber
         }

@@ -103,7 +103,7 @@ async function kirimICD9(date) {
         return
     });
     console.log(kirimBundle);
-    if (kirimBundle.total == 0) {
+    if (kirimBundle.total == 0 || kirimBundle == undefined) {
         console.log(kirimBundle.response);
         // throw new Error(kirimBundle.error);
         return
