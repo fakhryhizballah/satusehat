@@ -1,6 +1,7 @@
 const { EncounterDiagnosis } = require('../template/Condition');
 const Encounter = require("../modelsMongoose/Encounter");
 const Condition = require("../modelsMongoose/Condition");
+const Icd10 = require("../modelsMongoose/Icd10");
 const { diagnosa_pasien, penyakit } = require("../models");
 const { fetchSatusehat, fetchSatusehatPatch, fetchSatusehatBatch } = require("../helpersfetch/satusehat");
 async function kirimICD10(date) {
@@ -70,22 +71,29 @@ async function kirimICD10(date) {
 
 
 
-            // console.log('Data sudah ada di satu sehat');
-            if (y.dataValues.penyakit.dataValues.im == '1') {
-               let kodePenyakit = await penyakit.findOne({
-                   where: {
-                       kd_penyakit: y.dataValues.kd_penyakit.split('.')[0] + '.0'
-                   },
-                   attributes: ['kd_penyakit', 'nm_penyakit'],
-               })
-               if (kodePenyakit) {
-                   y.dataValues.kd_penyakit = kodePenyakit.dataValues.kd_penyakit
-                   y.dataValues.penyakit.dataValues.nm_penyakit = kodePenyakit.dataValues.nm_penyakit
-               }
+            // // console.log('Data sudah ada di satu sehat');
+            // if (y.dataValues.penyakit.dataValues.im == '1') {
+            //    let kodePenyakit = await penyakit.findOne({
+            //        where: {
+            //            kd_penyakit: y.dataValues.kd_penyakit.split('.')[0] + '.0'
+            //        },
+            //        attributes: ['kd_penyakit', 'nm_penyakit'],
+            //    })
+            //    if (kodePenyakit) {
+            //        y.dataValues.kd_penyakit = kodePenyakit.dataValues.kd_penyakit
+            //        y.dataValues.penyakit.dataValues.nm_penyakit = kodePenyakit.dataValues.nm_penyakit
+            //    }
+            // }
+            let findCekICD10 = await Icd10.find({
+                CODE: y.dataValues.kd_penyakit
+            })
+            console.log(findCekICD10);
+            if (findCekICD10.length == 0) {
+                continue
             }
             const diagnosisData = new EncounterDiagnosis({
-                icdCode: y.dataValues.kd_penyakit,
-                icdDisplay: y.dataValues.penyakit.dataValues.nm_penyakit,
+                icdCode: findCekICD10[0].CODE,
+                icdDisplay: findCekICD10[0].DISPLAY,
                 patientId: x.subject.reference.split("/")[1],
                 patientName: x.subject.display,
                 encounterId: x.id,
@@ -108,7 +116,8 @@ async function kirimICD10(date) {
             });
             if (kirimBundle.total == 0) {
                 console.log("Error Kirim ICD 10 Date/No Rawat:", x.identifier[0].value);
-                // throw new Error(kirimBundle.error);
+                console.log(JSON.stringify(kirimBundle, null, 2));
+                throw new Error(kirimBundle);
                 continue
             }
             let diagnosa_pasien = []
