@@ -45,7 +45,7 @@ async function kirimEncounter(date) {
         let ihsPasen = await getPatient(x.pasien.no_ktp, 'id name')
         if (!ihsPasen) {
             pasienNotExist++
-            console.log("pasien tidak ada", pasienNotExist)
+            console.log("pasien tidak ada", pasienNotExist, x.no_rawat, x.pasien.no_ktp)
             continue
         }
         let dataEncounter = await getEncounter(ihsPasen.id, x.no_rawat)
