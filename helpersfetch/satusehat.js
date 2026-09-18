@@ -57,7 +57,7 @@ async function fetchSatusehat(method, patch, data) {
     let config = {
         method: method,
         maxBodyLength: Infinity,
-        url: `${process.env.URL_SATUSEHAT}/${patch}`,
+        url: `${process.env.URL_SATUSEHAT}${patch}`,
         headers: {
             'Authorization': `Bearer ${authData.access_token}`
         },
