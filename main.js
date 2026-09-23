@@ -14,13 +14,13 @@ const { kirimMedicationRequest, kirimMedicationDispense } = require("./controler
 //     console.log('Mongoose connected to DB');
 // });
 
-mongoose.connection.on('error', (err) => {
-    console.log('Mongoose connection error:', err);
-});
+// mongoose.connection.on('error', (err) => {
+//     console.log('Mongoose connection error:', err);
+// });
 
-mongoose.connection.on('disconnected', () => {
-    console.log('Mongoose disconnected from DB');
-});
+// mongoose.connection.on('disconnected', () => {
+//     console.log('Mongoose disconnected from DB');
+// });
 
 // console.log(process.env.MONGO_URI)
 
@@ -82,13 +82,12 @@ async function loop(jumlah) {
         await kirimObservation(getDate(i));
         await updateEncounter(getDate(i));
         await updateEncounterRanap(getDate(i));
-        await kirimMedicationRequest(getDate(i));
-        await kirimMedicationDispense(getDate(i));
+        // await kirimMedicationRequest(getDate(i));
+        // await kirimMedicationDispense(getDate(i));
     }
 }
 
-loop(10);
-// loop(3);
+loop(24);
 // cron.schedule('0 4 * * *', async () => {
 //     loop(7);
 //     console.log('Job Jam 4 Selesai ' + getDate(0));

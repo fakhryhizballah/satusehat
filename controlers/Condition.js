@@ -68,26 +68,9 @@ async function kirimICD10(date) {
                 }
                 continue
             }
-
-
-
-            // // console.log('Data sudah ada di satu sehat');
-            // if (y.dataValues.penyakit.dataValues.im == '1') {
-            //    let kodePenyakit = await penyakit.findOne({
-            //        where: {
-            //            kd_penyakit: y.dataValues.kd_penyakit.split('.')[0] + '.0'
-            //        },
-            //        attributes: ['kd_penyakit', 'nm_penyakit'],
-            //    })
-            //    if (kodePenyakit) {
-            //        y.dataValues.kd_penyakit = kodePenyakit.dataValues.kd_penyakit
-            //        y.dataValues.penyakit.dataValues.nm_penyakit = kodePenyakit.dataValues.nm_penyakit
-            //    }
-            // }
             let findCekICD10 = await Icd10.find({
                 CODE: y.dataValues.kd_penyakit
             })
-            console.log(findCekICD10);
             if (findCekICD10.length == 0) {
                 continue
             }
@@ -109,7 +92,7 @@ async function kirimICD10(date) {
             });
         }
         if (bundel.entry.length > 0) {
-            console.log(JSON.stringify(bundel, null, 2));
+            // console.log(JSON.stringify(bundel, null, 2));
             let kirimBundle = await fetchSatusehatBatch("POST", bundel).catch((err) => {
                 console.log(JSON.stringify(err, null, 2));
                 return

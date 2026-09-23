@@ -6,6 +6,7 @@ const { convertToISO2, convertToISO3 } = require("../helpers/");
 const { getlisttask } = require("../helpersfetch/bpjs");
 const { satu_sehat_encounter, referensi_mobilejkn_bpjs_taskid } = require("../models");
 const { Op } = require("sequelize");
+const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const REDIS_DB = process.env.REDIS_DB || 0;
 
 const client = createClient({
@@ -65,7 +66,9 @@ async function fetchSatusehat(method, patch, data) {
     };
     try {
         const response = await axios(config);
-        // await new Promise(resolve => setTimeout(resolve, 500));
+        let random = getRandomInt(500, 1000);
+        console.log(random);
+        await new Promise(resolve => setTimeout(resolve, random));
         return response.data;
     }
     catch (error) {
@@ -117,6 +120,9 @@ async function fetchSatusehatBatch(method, data) {
     };
     try {
         const response = await axios(config);
+        let random = getRandomInt(500, 2000);
+        console.log(random);
+        await new Promise(resolve => setTimeout(resolve, random));
         return response.data;
     }
     catch (error) {

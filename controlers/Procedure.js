@@ -51,7 +51,7 @@ async function kirimICD9(date) {
         }
     ], { allowDiskUse: true });
     let NoRawat = encounters.map(encounter => encounter.noRawat);
-    // console.log(NoRawat);
+    // let EncounterId = encounters.map(encounter => encounter.id);
     let cari_prodsedur = await prosedur_pasien.findAll({
         where: {
             no_rawat: { [Op.in]: NoRawat }
@@ -77,7 +77,17 @@ async function kirimICD9(date) {
     }
     for (let x of cari_prodsedur) {
         let findEncounter = encounters.find(encounter => encounter.noRawat == x.no_rawat);
-
+        // let findisExist = await fetchSatusehat("GET", `/Procedure?encounter=${findEncounter.id}&code=${x.prosedur.kode}`)
+        // if (findisExist.total > 0) {
+        //     console.log("Procedure Exist: ", findisExist.entry[0].resource.id);
+        //     let finddataCondition = await Procedure.findOne({
+        //         'id': findisExist.entry[0].resource.id
+        //     })
+        //     if (!finddataCondition) {
+        //         let dataExist = await Procedure.create(findisExist.entry[0].resource);
+        //     }
+        //     continue
+        // }
         const procedureData = new ClinicalProcedure({
             icd9Code: x.prosedur.kode,
             icd9Display: x.prosedur.deskripsi_panjang,
@@ -102,18 +112,32 @@ async function kirimICD9(date) {
         console.log(JSON.stringify(err, null, 2));
         return
     });
-    console.log(kirimBundle);
+
     if (kirimBundle.total == 0 || kirimBundle == undefined) {
-        console.log(kirimBundle.response);
-        // throw new Error(kirimBundle.error);
-        return
+        // console.log(kirimBundle.response);
+        console.log(JSON.stringify(bundel, null, 2));
+        console.log(JSON.stringify(kirimBundle, null, 2));
+        throw new Error(kirimBundle.error);
     }
-    for (let i = 0; i < bundel.entry.length; i++) {
-        let data = bundel.entry[i].resource;
-        data.id = kirimBundle.entry[i].response.resourceID;
-        await Procedure.create(data).catch((err) => {
-            console.log(err);
-        });
+    // for (let i = 0; i < bundel.entry.length; i++) {
+    //     let data = bundel.entry[i].resource;
+    //     data.id = kirimBundle.entry[i].response.resourceID;
+    //     await Procedure.create(data).catch((err) => {
+    //         console.log(err);
+    //     });
+    // }
+    const proceduresData = bundel.entry.map((entry, i) => {
+        const data = { ...entry.resource };
+        data.id = kirimBundle.entry[i]?.response?.resourceID;
+        return data;
+    });
+
+    // 2. Eksekusi bulk insert ke MongoDB
+    try {
+        const result = await Procedure.insertMany(proceduresData, { ordered: false });
+        console.log(`Berhasil insert ${result.length} dokumen Procedure.`);
+    } catch (err) {
+        console.error("Gagal melakukan bulk insert:", err);
     }
     console.log("Total Kirim ICD9:", kirimBundle.entry.length);
     return
