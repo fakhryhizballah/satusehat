@@ -13,12 +13,14 @@
   "dependencies": {
     "@redis/json": "^6.0.0",
     "axios": "^1.16.1",
+    "better-sqlite3": "^13.0.3",
     "dotenv": "^17.4.2",
     "mariadb": "^3.4.5",
     "mongoose": "^8.24.0",
+    "node-cron": "^3.0.3",
+    "openai": "^7.23.0",
     "qs": "^6.12.1",
     "redis": "^6.0.0",
-    "node-cron": "^3.0.3",
     "sequelize": "^6.37.8"
   },
   "devDependencies": {
