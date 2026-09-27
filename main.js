@@ -7,9 +7,10 @@ const { kirimICD10 } = require("./controlers/Condition");
 const { kirimICD9 } = require("./controlers/Procedure");
 const { kirimObservation } = require("./controlers/Observation");
 const { kirimMedicationRequest, kirimMedicationDispense } = require("./controlers/Medication");
-// mongoose.connect(process.env.MONGO_URI)
-//     .then(() => console.log('Terhubung ke MongoDB!'))
-//     .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
+const { kirimAllergyintolerance } = require("./controlers/Alergi");
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('Terhubung ke MongoDB!'))
+    .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
 // mongoose.connection.on('connected', () => {
 //     console.log('Mongoose connected to DB');
 // });
@@ -87,7 +88,8 @@ async function loop(jumlah) {
     }
 }
 
-loop(24);
+// loop(24);
+kirimObservation("2026-09-16");
 // cron.schedule('0 4 * * *', async () => {
 //     loop(7);
 //     console.log('Job Jam 4 Selesai ' + getDate(0));

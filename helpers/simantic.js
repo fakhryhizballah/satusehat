@@ -2,6 +2,7 @@ require("dotenv").config();
 const { createClient } = require("redis");
 const mongoose = require("mongoose");
 const Alergi = require("../modelsMongoose/Alergi");
+const Radiologi = require("../modelsMongoose/Radiologi");
 const OpenAI = require("openai");
 
 const REDIS_DB = parseInt(process.env.REDIS_DB || "0", 10);
@@ -69,6 +70,33 @@ async function initVectorIndex() {
         } else {
             console.log(`[Redis] Index ${INDEX_NAME} already exists.`);
         }
+        if (!indices.includes('idx:radiologi')) {
+            await client.ft.create(
+                'idx:radiologi',
+                {
+                    content: { type: "TEXT" },
+                    category: { type: "TAG" },
+                    coding_system: { type: "TAG" },
+                    coding_code: { type: "TAG" },
+                    coding_display: { type: "TEXT" },
+                    text: { type: "TEXT" },
+                    embedding: {
+                        type: "VECTOR",
+                        ALGORITHM: "HNSW", // Menggunakan String "HNSW" || Flat (Exact Search) IVF (Inverted File)
+                        TYPE: "FLOAT32",
+                        DIM: VECTOR_DIM,
+                        DISTANCE_METRIC: "COSINE",
+                    },
+                },
+                {
+                    ON: "HASH",
+                    PREFIX: 'radiologi:'
+                }
+            );
+            console.log("[Redis] Vector Search Index Created Successfully.");
+
+        }
+
     } catch (err) {
         console.error("[Redis] Error during index initialization:", err);
         throw err;
@@ -98,7 +126,18 @@ async function getEmbedding(text) {
 
 async function saveChunkToRedis(id, data, embeddingArray) {
     const key = `${PREFIX}${id}`;
-    const vectorBuffer = float32Buffer(embeddingArray);
+    await client.hSet(key, {
+        content: data.content || "",
+        category: data.category || "",
+        coding_system: data.coding_system || "",
+        coding_code: data.coding_code || "",
+        coding_display: data.coding_display || "",
+        text: data.text || "",
+        embedding: float32Buffer(embeddingArray),
+    });
+}
+async function saveChunkToRedisRadiologi(id, data, embeddingArray) {
+    const key = `radiologi:${id}`;
     await client.hSet(key, {
         content: data.content || "",
         category: data.category || "",
@@ -138,14 +177,14 @@ async function SetData() {
     console.log("[System] Data Migration Completed.");
 }
 
-async function retrieveContext(query, topK = 2, scoreThreshold = 0.3) {
+async function retrieveContext(query, topK = 2, scoreThreshold = 0.3, index = INDEX_NAME) {
 
     const queryEmbedding = await getEmbedding(query.toLowerCase().replace(/[()[\]{}]|[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ""));
     const queryBuffer = float32Buffer(queryEmbedding);
 
     // Jalankan KNN query
     const searchResult = await client.ft.search(
-        INDEX_NAME,
+        index,
         `*=>[KNN ${topK} @embedding $BLOB AS vector_score]`,
         {
             PARAMS: {
@@ -200,4 +239,36 @@ async function main() {
     await client.disconnect();
 } 
 
-main().catch(console.error);
+// main().catch(console.error);
+
+async function RadiologiCek() {
+    await client.connect();
+    // await initVectorIndex();
+    // await mongoose.connect(process.env.MONGO_URI);
+    // const dataRadiologi = await Radiologi.find({}).lean();
+    // console.log(dataRadiologi);
+    // console.log(dataRadiologi[0]['Nama Pemeriksaan']);
+    // for (let x of dataRadiologi) {
+    //     console.log(`Processing: ${x._id}`);
+    //     const content = `${x["Nama Pemeriksaan"]} ${x.Display}`.replace(/[()[\]{}]|[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim().toLowerCase().replace(/\s+/g, " ");;
+    //     const embedding = await getEmbedding(content);
+
+    //     await saveChunkToRedisRadiologi(
+    //         x._id.toString(),
+    //         {
+    //             content,
+    //             category: x['Nama Pemeriksaan'],
+    //             coding_system: x['Code System'],
+    //             coding_code: x['Code'],
+    //             coding_display: x['Display'],
+    //             text: x['Component'],
+    //         },
+    //         embedding
+    //     );
+    // }
+    // return dataRadiologi;
+    // retrieveContext("CT SCAN SINUS PARANASAL DENGAN KONTRAS", 5, 0.3, "idx:radiologi");
+    retrieveContext("USG ABDOMEN", 5, 0.3, "idx:radiologi");
+    // retrieveContext("BONE SURVEY CR", 5, 0.3, "idx:radiologi");
+}
+RadiologiCek();
