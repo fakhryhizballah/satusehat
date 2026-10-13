@@ -7,7 +7,7 @@ const { kirimICD10 } = require("./controlers/Condition");
 const { kirimICD9 } = require("./controlers/Procedure");
 const { kirimObservation } = require("./controlers/Observation");
 const { kirimMedicationRequest, kirimMedicationDispense } = require("./controlers/Medication");
-const { kirimAllergyintolerance } = require("./controlers/Alergi");
+// const { kirimAllergyintolerance } = require("./controlers/Alergi");
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Terhubung ke MongoDB!'))
     .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
@@ -83,13 +83,13 @@ async function loop(jumlah) {
         await kirimObservation(getDate(i));
         await updateEncounter(getDate(i));
         await updateEncounterRanap(getDate(i));
-        // await kirimMedicationRequest(getDate(i));
+        await kirimMedicationRequest(getDate(i));
         // await kirimMedicationDispense(getDate(i));
     }
 }
 
-// loop(24);
-kirimObservation("2026-09-16");
+loop(48);
+// kirimObservation("2026-09-25");
 // cron.schedule('0 4 * * *', async () => {
 //     loop(7);
 //     console.log('Job Jam 4 Selesai ' + getDate(0));
