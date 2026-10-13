@@ -62,7 +62,7 @@ async function kirimObservation(date) {
     for (let x of encounters) {
         let findObservation = observationsByEncounter.get(`Encounter/${x.id}`) || []
         if (findObservation.length === 0) {
-            let findObservationSatuSehat = await fetchSatusehat('GET', `Observation?encounter=Encounter/${x.id}`)
+            let findObservationSatuSehat = await fetchSatusehat('GET', `/Observation?encounter=Encounter/${x.id}`)
             if (findObservationSatuSehat.total !== 0) {
                 const bulkOps = findObservationSatuSehat.entry.map(item => ({
                     replaceOne: {
@@ -298,6 +298,9 @@ async function kirimObservation(date) {
 
                 if (kirimObservation.total === 0) {
                     console.log(JSON.stringify(kirimObservation.response.issue, null, 2));
+                    if (kirimObservation.response.issue[0].code == "duplicate") {
+                        console.log(kirimObservation.response.issue[0].details.text);
+                    }
                     return
 
                 }
