@@ -162,7 +162,8 @@ function BodyTemperatureObservation(config = {}) {
     };
 
     this.encounter = {
-        reference: `Encounter/${config.encounterId || ''}`
+        reference: `Encounter/${config.encounterId || ''}`,
+        display: config.encounterDisplay || ''
     };
 
     this.effectiveDateTime = config.effectiveDate;
@@ -217,7 +218,8 @@ function RespiratoryRateObservation(config = {}) {
     };
 
     this.encounter = {
-        reference: `Encounter/${config.encounterId || ''}`
+        reference: `Encounter/${config.encounterId || ''}`,
+        display: config.encounterDisplay || ''
     };
 
     this.effectiveDateTime = config.effectiveDate;
@@ -271,7 +273,8 @@ function BodyWeightObservation(config = {}) {
     };
 
     this.encounter = {
-        reference: `Encounter/${config.encounterId || ''}`
+        reference: `Encounter/${config.encounterId || ''}`,
+        display: config.encounterDisplay || ''
     };
 
     this.effectiveDateTime = config.effectiveDate;
@@ -321,11 +324,12 @@ function OxygenSaturationObservation(config = {}) {
 
     this.subject = {
         reference: `Patient/${config.patientId || ''}`,
-        display: config.patientName || ''
+        display: config.patientDisplay || ''
     };
 
     this.encounter = {
-        reference: `Encounter/${config.encounterId || ''}`
+        reference: `Encounter/${config.encounterId || ''}`,
+        display: config.encounterDisplay || ''
     };
 
     this.effectiveDateTime = config.effectiveDate;
@@ -334,7 +338,7 @@ function OxygenSaturationObservation(config = {}) {
     this.performer = [
         {
             reference: `Practitioner/${config.practitionerId || ''}`,
-            display: config.practitionerName || ''
+            display: config.practitionerDisplay || ''
         }
     ];
 

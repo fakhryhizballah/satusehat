@@ -131,6 +131,7 @@ async function kirimObservation(date) {
                         practitionerId: ihsPetugas.id,
                         practitionerDisplay: ihsPetugas.name[0].text,
                         dateTime: utcString.split('.')[0] + "+00:00",
+                        effectiveDate: utcString.split('.')[0] + "+00:00",
                         issued: utcString.split('.')[0] + "+00:00"
                     };
                     if (i.nadi != '' && i.nadi != 0) {
@@ -157,6 +158,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             type: 'systolic',
                             value: i.tensi.split("/")[0],
+                            encounterDisplay: "Pemeriksaan Fisik Tekanan Darah pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat
 
                         });
 
@@ -165,6 +167,7 @@ async function kirimObservation(date) {
                             ...sharedConfig,
                             type: 'diastolic',
                             value: i.tensi.split("/")[1],
+                            encounterDisplay: "Pemeriksaan Fisik Tekanan Darah pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat
 
                         });
 
@@ -233,9 +236,8 @@ async function kirimObservation(date) {
                     if (i.berat != '' && i.berat != 0) {
                         let dataBodyWeightObservation = new BodyWeightObservation({
                             ...sharedConfig,
-                            encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
-
-                            bodyWeight: i.spo2
+                            encounterDisplay: "Pemeriksaan Fisik Berat Badan pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
+                            bodyWeight: i.berat
                         });
                         const bodyWeightEntry = {
                             "fullUrl": "urn:uuid:" + crypto.randomUUID(),
@@ -252,7 +254,7 @@ async function kirimObservation(date) {
                     if (i.spo2 != '' && i.spo2 != 0) {
                         let dataOxygenSaturationObservation = new OxygenSaturationObservation({
                             ...sharedConfig,
-                            encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
+                            encounterDisplay: "Pemeriksaan Fisik SpO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
 
                             oxygenSaturation: i.spo2
                         });
@@ -271,8 +273,8 @@ async function kirimObservation(date) {
                     if (i.intruksi != '') {
                         let dataClinicalCarePlan = new ClinicalCarePlan({
                             ...sharedConfig,
-                            description: `instruksi: ${i.intruksi} RTL: ${i.rtl}`,
-                            encounterDisplay: "Pemeriksaan Fisik Intruksi dan RTL pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
+                            description: `instruksi: ${i.instruksi} RTL: ${i.rtl}`,
+                            encounterDisplay: "Pemeriksaan Fisik instruksi dan RTL pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
 
                         });
                         const carePlanEntry = {
@@ -288,9 +290,11 @@ async function kirimObservation(date) {
                         }
                     }
                 }
+                console.log(JSON.stringify(bundel, null, 2));
+
 
                 let kirimObservation = await fetchSatusehatBatch("POST", bundel);
-
+                console.log(JSON.stringify(kirimObservation, null, 2));
 
                 if (kirimObservation.total === 0) {
                     console.log(JSON.stringify(kirimObservation.response.issue, null, 2));
@@ -471,9 +475,9 @@ async function kirimObservation(date) {
                     if (i.berat != '' && i.berat != 0) {
                         let dataBodyWeightObservation = new BodyWeightObservation({
                             ...sharedConfig,
-                            encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
+                            encounterDisplay: "Pemeriksaan Fisik Berat Badan pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
 
-                            bodyWeight: i.spo2
+                            bodyWeight: i.berat
                         });
                         const bodyWeightEntry = {
                             "fullUrl": "urn:uuid:" + crypto.randomUUID(),
@@ -490,7 +494,7 @@ async function kirimObservation(date) {
                     if (i.spo2 != '' && i.spo2 !== 0) {
                         let dataOxygenSaturationObservation = new OxygenSaturationObservation({
                             ...sharedConfig,
-                            encounterDisplay: "Pemeriksaan Fisik SPO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
+                            encounterDisplay: "Pemeriksaan Fisik SpO2 pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
 
                             oxygenSaturation: i.spo2
                         });
@@ -509,8 +513,8 @@ async function kirimObservation(date) {
                     if (i.intruksi != '') {
                         let dataClinicalCarePlan = new ClinicalCarePlan({
                             ...sharedConfig,
-                            description: `instruksi: ${i.intruksi} RTL: ${i.rtl}`,
-                            encounterDisplay: "Pemeriksaan Fisik Intruksi dan RTL pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
+                            description: `instruksi: ${i.instruksi} RTL: ${i.rtl}`,
+                            encounterDisplay: "Pemeriksaan Fisik instruksi dan RTL pada pasien " + x.subject.display + " pada tanggal " + i.tgl_perawatan + " " + i.jam_rawat + " no rawat " + norawat,
 
                         });
                         const carePlanEntry = {
