@@ -33,41 +33,41 @@ async function kirimICD10(date) {
             "entry": []
         }
         for (let y of dataCondition) {
-            // let findisExist = await fetchSatusehat("GET", `/Condition?encounter=${x.id}&code=${y.dataValues.kd_penyakit}`)
-            // if (findisExist.total > 0) {
-            //     let diagnosa_pasien = []
-            //     diagnosa_pasien.push({
-            //         "condition": {
-            //             "display": findisExist.entry[0].resource.code.coding[0].display,
-            //             "reference": "Condition/" + findisExist.entry[0].resource.id
-            //         },
-            //         "use": {
-            //             "coding": [
-            //                 {
-            //                     "code": "DD",
-            //                     "display": "Discharge diagnosis",
-            //                     "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role"
-            //                 }
-            //             ]
-            //         }
-            //     })
-            //     let addDiagnosis = [
-            //         {
-            //             "op": "add",
-            //             "path": "/diagnosis",
-            //             "value": diagnosa_pasien
-            //         }
-            //     ]
-            //     let updateEncounter = await fetchSatusehatPatch("PATCH", `Encounter/${x.id}`, addDiagnosis);
-            //     await Encounter.updateOne({ id: x.id }, { diagnosis: updateEncounter.diagnosis, meta: updateEncounter.meta })
-            //     let finddataCondition = await Condition.findOne({
-            //         'id': findisExist.entry[0].resource.id
-            //     })
-            //     if (!finddataCondition) {
-            //         let dataExist = await Condition.create(findisExist.entry[0].resource);
-            //     }
-            //     continue
-            // }
+            let findisExist = await fetchSatusehat("GET", `/Condition?encounter=${x.id}&code=${y.dataValues.kd_penyakit}`)
+            if (findisExist.total > 0) {
+                let diagnosa_pasien = []
+                diagnosa_pasien.push({
+                    "condition": {
+                        "display": findisExist.entry[0].resource.code.coding[0].display,
+                        "reference": "Condition/" + findisExist.entry[0].resource.id
+                    },
+                    "use": {
+                        "coding": [
+                            {
+                                "code": "DD",
+                                "display": "Discharge diagnosis",
+                                "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role"
+                            }
+                        ]
+                    }
+                })
+                let addDiagnosis = [
+                    {
+                        "op": "add",
+                        "path": "/diagnosis",
+                        "value": diagnosa_pasien
+                    }
+                ]
+                let updateEncounter = await fetchSatusehatPatch("PATCH", `Encounter/${x.id}`, addDiagnosis);
+                await Encounter.updateOne({ id: x.id }, { diagnosis: updateEncounter.diagnosis, meta: updateEncounter.meta })
+                let finddataCondition = await Condition.findOne({
+                    'id': findisExist.entry[0].resource.id
+                })
+                if (!finddataCondition) {
+                    let dataExist = await Condition.create(findisExist.entry[0].resource);
+                }
+                continue
+            }
             let findCekICD10 = await Icd10.find({
                 CODE: y.dataValues.kd_penyakit
             })
@@ -99,9 +99,14 @@ async function kirimICD10(date) {
             });
             if (kirimBundle.total == 0) {
                 console.log("Error Kirim ICD 10 Date/No Rawat:", x.identifier[0].value);
-                console.log(JSON.stringify(kirimBundle, null, 2));
-                throw new Error(kirimBundle);
-                continue
+                console.log(JSON.stringify(kirimBundle.response.issue, null, 2));
+                if (kirimBundle.response.issue[0].code == "duplicate") {
+                    console.log(JSON.stringify(bundel, null, 2));
+                    console.log(kirimBundle.response.issue[0].details.text);
+                    return
+                } else {
+                    continue
+                }
             }
             let diagnosa_pasien = []
             for (let i = 0; i < bundel.entry.length; i++) {
@@ -138,7 +143,7 @@ async function kirimICD10(date) {
 
 
     }
-    console.log("Selesai Kirim ICD 10");
+    console.log("Selesai Kirim ICD 10 " + date);
     return
 }
 

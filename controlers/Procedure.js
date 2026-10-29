@@ -77,17 +77,17 @@ async function kirimICD9(date) {
     }
     for (let x of cari_prodsedur) {
         let findEncounter = encounters.find(encounter => encounter.noRawat == x.no_rawat);
-        // let findisExist = await fetchSatusehat("GET", `/Procedure?encounter=${findEncounter.id}&code=${x.prosedur.kode}`)
-        // if (findisExist.total > 0) {
-        //     console.log("Procedure Exist: ", findisExist.entry[0].resource.id);
-        //     let finddataCondition = await Procedure.findOne({
-        //         'id': findisExist.entry[0].resource.id
-        //     })
-        //     if (!finddataCondition) {
-        //         let dataExist = await Procedure.create(findisExist.entry[0].resource);
-        //     }
-        //     continue
-        // }
+        let findisExist = await fetchSatusehat("GET", `/Procedure?encounter=${findEncounter.id}&code=${x.prosedur.kode}`)
+        if (findisExist.total > 0) {
+            console.log("Procedure Exist: ", findisExist.entry[0].resource.id);
+            let finddataCondition = await Procedure.findOne({
+                'id': findisExist.entry[0].resource.id
+            })
+            if (!finddataCondition) {
+                let dataExist = await Procedure.create(findisExist.entry[0].resource);
+            }
+            continue
+        }
         const procedureData = new ClinicalProcedure({
             icd9Code: x.prosedur.kode,
             icd9Display: x.prosedur.deskripsi_panjang,
@@ -140,6 +140,7 @@ async function kirimICD9(date) {
         console.error("Gagal melakukan bulk insert:", err);
     }
     console.log("Total Kirim ICD9:", kirimBundle.entry.length);
+    console.log("Selesai Kirim ICD9:", date);
     return
 }
 

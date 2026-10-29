@@ -67,7 +67,7 @@ async function fetchSatusehat(method, patch, data) {
     try {
         const response = await axios(config);
         let random = getRandomInt(500, 1000);
-        console.log(random);
+        console.log("fetchSatusehat", random, method, patch);
         await new Promise(resolve => setTimeout(resolve, random));
         return response.data;
     }
@@ -120,8 +120,8 @@ async function fetchSatusehatBatch(method, data) {
     };
     try {
         const response = await axios(config);
-        let random = getRandomInt(500, 2000);
-        console.log(random);
+        let random = getRandomInt(100, 1000);
+        console.log("fetchSatusehatBatch", random, method);
         await new Promise(resolve => setTimeout(resolve, random));
         return response.data;
     }
